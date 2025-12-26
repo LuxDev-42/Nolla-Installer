@@ -26,7 +26,7 @@ This is an early project and may contain bugs or unoptimized sections of code. U
 
 ## Future Plans
 
-I might revisit this project to implement improvements such as automated Fabric installation, better error handling, and a graphical interface.
+The plan was to revisit this project to implement improvements such as automated Fabric installation, better error handling, and a graphical interface. I wont touch this project any longer.
 
 ---
 
