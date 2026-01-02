@@ -1,8 +1,6 @@
-# Nolla installer - Version 0.60
-# - This version have little "final" modifications before personal distribuition, like:
-#       > Now it locates the XML in the mods folder
-#       > if a backup is detected in the backups folder, it will restore the latest.
-# Status = finished (stable)
+# Nolla installer - Version 0.70
+# - I'm comming back to this damn code to see if i can make some ajustments both to the Nolla file, changing some mods, and making sure it works now with 1.20.1.
+# Status = WIP (unstable)
 
 import datetime
 import fnmatch
@@ -56,29 +54,51 @@ else:
 #Functions Section
 
 # update the JSON file function
+# Section made by GPT (not yet tested or revised)
 def update_profile():
-        launcher_profiles_path = os.path.join(mc_path, 'launcher_profiles.json')
+    launcher_profiles_path = os.path.join(mc_path, 'launcher_profiles.json')
+    data = json.load(f)
+    # Check if the profile is already present
+    if 'fabric-loader-1.20.1' in data["profiles"]:
+        # The profile exists; update it
+        print("Updating profile...")
+        data["profiles"]["fabric-loader-1.20.1"]["name"] = "Nolla"
+        data["profiles"]["fabric-loader-1.20.1"]["icon"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAGFBMVEX/KkD/////pC5WIQC0cyCysrLDw8NHcEyKeIT6AAAACHRSTlP/////////AN6DvVkAAAJPSURBVGjezdnBkYUgDADQtEALtJAWfgvsfQ9rC7S/AiIIAYIC38we/g7mDVFEFNDFgCgqR00CgIiVABRiEQDVWAAA9AmjAWDEVACgWxgK5AfiHnTLFIA6BLfNEXQzA1CKDZDtO7AJrB3RBhQTINNRiLgL1EEMQLEAosmki2YXOIDqA858IQ5ABCA6cDCQXyGfv8UVEEITUCyAuFUcYO4mPG8HSuAAqhcAB5hcse1hBgISAgtQNloANWkdw8gJ2+VKXgQeoOpAyDt/+XQv/BQHExNQLCD8DOlmJFZraAKKD4SmvAMJoPmAYgDJzREAjELQw3koELWhyw4nwkShBhbwp0qzggHyRwWYDos43GAkLyQPyLuQA3Fjkn4Av2QNHYBgA2m67wFVQw8guECc74rZ1EPAdqBUAtQAdH9+NFdXhE8BOl/aQf1xcb2d9AoApTSCB/Z/1gD6OG3HyYvnFb0I2J9q0nb+UkJSwFTA5tmBYx2UDkC9EvCdlzaWA+dJ/B6gCUCuBbS/gJUKVgA+FgFQB/aCWh8KbgO6WYMHyC8FehmA6TGzgUj4BACmAlAD5AEAa5XWC7RqiCq4LkdLK9XbALAAaK7WbwCNGo75LHnhLb6xPAHoGs7ZBPJ3s+EAKYT5jHg/HQXoBuAfKuQ0OAaoCfGUTs3DgwGoA3oeUBGuj7X8UTQKoAVM84mPduOBZMWXADAPoAUsn0M9HCh8mC4NIz0BoD/OB+Dm1/0egFy4uVet2zscncD3d3nesNP1gt2+N+x4vmDX9xU730t3//8BP73sL+DuoDsAAAAASUVORK5CYII="
+
+        # Write the updated data back to the JSON file
+        with open(launcher_profiles_path, 'w') as f:
+            json.dump(data, f, indent=4)
+
+        print("Profile updated successfully!")
+    else:
+        # The profile doesn't exist; proceed to check for the Fabric version
+        print("Checking for Fabric version...")
         
-        print("Atualizando perfil...")
+        # Construct the path to the Fabric Modloader
+        fabric_version_path = os.path.join(mc_path, 'versions', 'fabric-loader-0.14.23-1.20.1', 'fabric-loader-0.14.23-1.20.1.jar')
         
-        try:
-            # Open the JSON file for reading
-            with open(launcher_profiles_path, 'r') as f:
-                data = json.load(f)
-            
-            # Update the data in memory
-            data["profiles"]["fabric-loader-1.19.2"]["name"] = "Nolla"
-            data["profiles"]["fabric-loader-1.19.2"]["icon"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAGFBMVEX/KkD/////pC5WIQC0cyCysrLDw8NHcEyKeIT6AAAACHRSTlP/////////AN6DvVkAAAJPSURBVGjezdnBkYUgDADQtEALtJAWfgvsfQ9rC7S/AiIIAYIC38we/g7mDVFEFNDFgCgqR00CgIiVABRiEQDVWAAA9AmjAWDEVACgWxgK5AfiHnTLFIA6BLfNEXQzA1CKDZDtO7AJrB3RBhQTINNRiLgL1EEMQLEAosmki2YXOIDqA858IQ5ABCA6cDCQXyGfv8UVEEITUCyAuFUcYO4mPG8HSuAAqhcAB5hcse1hBgISAgtQNloANWkdw8gJ2+VKXgQeoOpAyDt/+XQv/BQHExNQLCD8DOlmJFZraAKKD4SmvAMJoPmAYgDJzREAjELQw3koELWhyw4nwkShBhbwp0qzggHyRwWYDos43GAkLyQPyLuQA3Fjkn4Av2QNHYBgA2m67wFVQw8guECc74rZ1EPAdqBUAtQAdH9+NFdXhE8BOl/aQf1xcb2d9AoApTSCB/Z/1gD6OG3HyYvnFb0I2J9q0nb+UkJSwFTA5tmBYx2UDkC9EvCdlzaWA+dJ/B6gCUCuBbS/gJUKVgA+FgFQB/aCWh8KbgO6WYMHyC8FehmA6TGzgUj4BACmAlAD5AEAa5XWC7RqiCq4LkdLK9XbALAAaK7WbwCNGo75LHnhLb6xPAHoGs7ZBPJ3s+EAKYT5jHg/HQXoBuAfKuQ0OAaoCfGUTs3DgwGoA3oeUBGuj7X8UTQKoAVM84mPduOBZMWXADAPoAUsn0M9HCh8mC4NIz0BoD/OB+Dm1/0egFy4uVet2zscncD3d3nesNP1gt2+N+x4vmDX9xU730t3//8BP73sL+DuoDsAAAAASUVORK5CYII="
-            
+        # Check if the Fabric version jar file exists
+        if os.path.exists(fabric_version_path):
+            # The Fabric version is present; create the profile
+            print("Creating profile...")
+            data["profiles"]["fabric-loader-1.20.1"] = {
+                "lastUsed": "2023-10-23T17:08:32-0400",
+                "lastVersionId": "fabric-loader-0.14.23-1.20.1",
+                "created": "2023-10-23T17:08:32-0400",
+                "name": "fabric-loader-1.20.1",
+                "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAGFBMVEX/KkD/////pC5WIQC0cyCysrLDw8NHcEyKeIT6AAAACHRSTlP/////////AN6DvVkAAAJPSURBVGjezdnBkYUgDADQtEALtJAWfgvsfQ9rC7S/AiIIAYIC38we/g7mDVFEFNDFgCgqR00CgIiVABRiEQDVWAAA9AmjAWDEVACgWxgK5AfiHnTLFIA6BLfNEXQzA1CKDZDtO7AJrB3RBhQTINNRiLgL1EEMQLEAosmki2YXOIDqA858IQ5ABCA6cDCQXyGfv8UVEEITUCyAuFUcYO4mPG8HSuAAqhcAB5hcse1hBgISAgtQNloANWkdw8gJ2+VKXgQeoOpAyDt/+XQv/BQHExNQLCD8DOlmJFZraAKKD4SmvAMJoPmAYgDJzREAjELQw3koELWhyw4nwkShBhbwp0qzggHyRwWYDos43GAkLyQPyLuQA3Fjkn4Av2QNHYBgA2m67wFVQw8guECc74rZ1EPAdqBUAtQAdH9+NFdXhE8BOl/aQf1xcb2d9AoApTSCB/Z/1gD6OG3HyYvnFb0I2J9q0nb+UkJSwFTA5tmBYx2UDkC9EvCdlzaWA+dJ/B6gCUCuBbS/gJUKVgA+FgFQB/aCWh8KbgO6WYMHyC8FehmA6TGzgUj4BACmAlAD5AEAa5XWC7RqiCq4LkdLK9XbALAAaK7WbwCNGo75LHnhLb6xPAHoGs7ZBPJ3s+EAKYT5jHg/HQXoBuAfKuQ0OAaoCfGUTs3DgwGoA3oeUBGuj7X8UTQKoAVM84mPduOBZMWXADAPoAUsn0M9HCh8mC4NIz0BoD/OB+Dm1/0egFy4uVet2zscncD3d3nesNP1gt2+N+x4vmDX9xU730t3//8BP73sL+DuoDsAAAAASUVORK5CYII="
+            }
+
             # Write the updated data back to the JSON file
             with open(launcher_profiles_path, 'w') as f:
                 json.dump(data, f, indent=4)
-                
-            print("Perfil atualizado com sucesso!")
-            messagebox.showinfo("Perfil atualizado com sucesso!", "Você verá um perfil chamado Nolla nas versões de minecraft ")
-            
-        except Exception as e:
-            print("Error updating profile:", e)
+
+            print("Profile created successfully!")
+        else:
+            # The Fabric version is not found; show an error notification and exit
+            print("Fabric version not found.")
+            messagebox.showerror("Update Error", "The Fabric Modloader version 1.20.1 was not found. Please make sure you have the correct version of Minecraft (1.20.1) installed. If the issue persists, consider manual installation.")
+            sys.exit()
 
 # install nolla function
 def install_nolla():
@@ -173,12 +193,12 @@ def backup_mods(mc_path):
         # show a message box confirming the backup was successful
         messagebox.showinfo("Backup feito", f"Seus mods foram salvos em {backup_folder}")
 
-# Nolla installer
+# Nolla installer: Install the modloader if not present, and makes all the necessary copying to the right places
 def nolla_process():
     #Nolla installer here
 
     # Search for the fabric modloader 
-    modloader_pattern = "*fabric*loader*1.19.2*.jar"
+    modloader_pattern = "*fabric*loader*1.20.1*.jar"
     modloader_path = None
     for root, dirs, files in os.walk(os.path.join(mc_path, "versions")):
         for file in files:
@@ -190,7 +210,7 @@ def nolla_process():
     
     # If modloader is missing, popen and wait the fabric installer 
     if not modloader_path:
-        messagebox.showinfo("Fabric Modloader Ausente", "A versão correta do Modloader Fabric é requerido para o funcionamento do Modpack.\n\nLembre de instalar a versão Minecraft 1.19.2.\n\nA versão do modloader pode ser a mais recente.")
+        messagebox.showinfo("Fabric Modloader Ausente", "A versão correta do Modloader Fabric é requerido para o funcionamento do Modpack.\n\nLembre de instalar a versão Minecraft 1.20.1.\n\nA versão do modloader pode ser a mais recente.")
 
         # Search for the Fabric Installer
         print("Procurando instalador Fabric...")
@@ -206,12 +226,12 @@ def nolla_process():
             sys.exit()
         
         # Open the fabric installer (It is intended for future versions to make this section AUTOMATED without user input)
-        print("\n\n\nAbrindo instalador...\n\nlembre-se de que a versão Minecraft correta é a 1.19.2.\n\nA versão do modloader pode ser a mais recente (recomendado)")
+        print("\n\n\nAbrindo instalador...\n\nlembre-se de que a versão Minecraft correta é a 1.20.1.\n\nA versão do modloader pode ser a mais recente (recomendado)")
         subprocess.Popen(fabric_installer_path, cwd=mc_path).wait()
 
         # Check if the correct fabric version was installed
         print("Checando versão...")
-        modloader_pattern = "*fabric*loader*1.19.2*.jar"
+        modloader_pattern = "*fabric*loader*1.20.1*.jar"
         modloader_path = None
         for root, _, files in os.walk(os.path.join(mc_path, "versions")):
             for file in files:
@@ -227,7 +247,7 @@ def nolla_process():
             remove_old_folders()
             install_nolla()
         else:
-            messagebox.showerror("Erro de atualização", "O Modloader Fabric não pôde ser encontrado.\n\nVerifique se a versão correta do Minecraft (1.19.2) foi instalado.\n\n Caso o erro persista, instale manualmente.")
+            messagebox.showerror("Erro de atualização", f"O Modloader Fabric não pôde ser encontrado.\n\nVerifique se a versão correta do Minecraft (1.20.1) foi instalado.\n\n Caso o erro persista, instale manualmente com {installer_pattern}.")
             sys.exit()
         # End of the fabric instalation process (to be AUTOMATED) 
     else:
@@ -236,9 +256,10 @@ def nolla_process():
         print(f"nolla instalado: {installed_version}")
         print(f"nolla disponível: {nolla_version}")
         if installed_version == highest_version_folder.split()[-1]: # Nolla is updated
+
             update_profile
             print("Nolla atualizado")
-            messagebox.showinfo("Nolla atualizado", "A versão mais recente do Modpack Nolla está instalado!")
+            check_reinstall_GUI()
             sys.exit()
         else:
             print("Nova atualização nolla encontrada!")
@@ -290,6 +311,45 @@ def update_nolla_gui():
 
     root.mainloop()
 
+#GUI for reinstalation, profile update or skip process
+def check_reinstall_GUI():
+        root = tk.Tk()
+        root.title("Nolla Atualizado")
+        root.geometry("500x100")
+
+        label = tk.Label(root, text="Sua versão Nolla está atualizada, deseja fazer uma reinstalação?")
+        label.pack(pady=5)
+
+        frame = tk.Frame(root)
+        frame.pack(pady=5)
+
+        def Reinstall():
+            root.destroy()
+            remove_old_folders()
+            install_nolla()
+
+        reinstall_button = tk.Button(frame, text="Reinstalar", command=Reinstall)
+        reinstall_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+        def profile_updater():
+            root.destroy()
+            update_profile()
+
+        prof_updater_button = tk.Button(frame, text="Atualizar Perfil", command=profile_updater) 
+        prof_updater_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+        def ignore():
+            root.destroy()
+            messagebox.showinfo("Instalação cancelada", "Instalação não foi prosseguida")
+            sys.exit
+
+        ignore_button = tk.Button(frame, text="Ignorar", command=ignore)
+        ignore_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+        root.eval('tk::PlaceWindow . center')
+
+        root.mainloop()
+
 # check if the "mods" folder exists in the Minecraft directory
 if os.path.isdir(os.path.join(mc_path, "mods")):
     if os.path.isfile(os.path.join(mc_path, "nolla_metadata.xml")):
@@ -316,16 +376,16 @@ if os.path.isdir(os.path.join(mc_path, "mods")):
             root.destroy()
             nolla_process()
 
-        proceed_button = tk.Button(frame, text="Prosseguir", command=proceed)
-        proceed_button.pack(side=tk.LEFT, padx=10, pady=10)
+        reinstall_button = tk.Button(frame, text="Prosseguir", command=proceed)
+        reinstall_button.pack(side=tk.LEFT, padx=10, pady=10)
 
         def backup():
             root.destroy()
             backup_mods(mc_path)
             nolla_process()
 
-        Backup_button = tk.Button(frame, text="Fazer Backup", command=backup) 
-        Backup_button.pack(side=tk.LEFT, padx=10, pady=10)
+        prof_updater_button = tk.Button(frame, text="Fazer Backup", command=backup) 
+        prof_updater_button.pack(side=tk.LEFT, padx=10, pady=10)
 
         root.eval('tk::PlaceWindow . center')
 

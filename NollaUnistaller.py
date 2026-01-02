@@ -41,15 +41,15 @@ def full_delete():
             data = json.load(f)
             if "profiles" in data:
                 profiles = data["profiles"]
-                if "fabric-loader-1.19.2" in profiles:
+                if "*fabric-loader-1.20.1*" in profiles:
                     print("Removing launcher profile for Nolla")
-                    del profiles["fabric-loader-1.19.2"]
+                    del profiles["fabric-loader-1.20.1"]
                     f.seek(0)
                     json.dump(data, f, indent=4)
                     f.truncate()
 
     # Delete Nolla version folder
-    version_folder_path = os.path.join(mc_path, "versions", "fabric-loader-0.14.19-1.19.2")
+    version_folder_path = os.path.join(mc_path, "versions", "fabric-loader-*-1.20.1")
     if os.path.exists(version_folder_path):
         print(f"Removing version folder: {version_folder_path}")
         shutil.rmtree(version_folder_path)
