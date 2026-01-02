@@ -32,6 +32,10 @@ This project is licensed under the MIT License.
 
 This is an early personal project and may contain bugs, incomplete features, or unoptimized code. Use at your own risk.
 
+## Other info
+
+In case youre curious about the modpack, [here is the link to it's page on modrinth](https://modrinth.com/modpack/nolla-modpack)
+
 ---
 
 Thank you for checking out this project!
