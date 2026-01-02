@@ -1,6 +1,7 @@
-# Nolla installer - Version 0.55
-# - This version have little final modifications before personal distribuition, like:
+# Nolla installer - Version 0.60
+# - This version have little "final" modifications before personal distribuition, like:
 #       > Now it locates the XML in the mods folder
+#       > if a backup is detected in the backups folder, it will restore the latest.
 # Status = finished (stable)
 
 import datetime
@@ -40,7 +41,7 @@ else:
 
 # Find the Minecraft directory
 print("Procurando .Minecraft...")
-mc_path = os.path.join(os.getenv("APPDATA"), ".minecraft") # type: ignore
+mc_path = os.path.join(os.getenv("APPDATA"), ".minecraft") 
 
 # Check if nolla_metadata.xml exists and parse it
 print("Obtendo versão Nolla instalado...")
@@ -48,7 +49,7 @@ metadata_file = os.path.join(mc_path, "mods", "nolla_metadata.xml")
 if os.path.exists(metadata_file):
     tree = ET.parse(metadata_file)
     root = tree.getroot()
-    installed_version = root.find("version").text #type: ignore
+    installed_version = root.find("version").text
 else:
     installed_version = "0.00"
 
@@ -81,25 +82,55 @@ def update_profile():
 
 # install nolla function
 def install_nolla():
+    # Default value for backed_files
+    backed_files = None
+
+    filebackup_dir = os.path.join(os.path.expanduser("~"), "Documents", "*Nolla_Backup*")
+    if os.path.exists(filebackup_dir):
+        print("Backup encontrado")
+        backup_folders = os.listdir(filebackup_dir)
+        if backup_folders:
+            # Sort the backup folders based on their timestamp
+            backup_folders.sort(reverse=True)
+            latest_backup = backup_folders[0]
+            backed_files = os.path.join(filebackup_dir, latest_backup)
+    else:
+        print("Nenhum backup encontrado")
+        
     # Copy the contents of the nolla folder to the Minecraft directory (first remove info files)
     file_path = os.path.join(mc_path, "nolla_metadata.xml")
     if os.path.exists(file_path):
         print(f"Removendo nolla_metadata.xml")
         os.remove(file_path)
-    
+
     modlist_path = os.path.join(mc_path, f".NollaModList_v{installed_version}.txt")
     if os.path.exists(modlist_path):
         print(f"Removendo .NollaModList_v{installed_version}.txt")
         os.remove(modlist_path)
-    
+
     for item in os.listdir(nolla_path):
         s = os.path.join(nolla_path, item)
         d = os.path.join(mc_path, item)
         if os.path.isdir(s):
-            shutil.copytree(s, d, False, None, dirs_exist_ok=True)
+            shutil.copytree(s, d, dirs_exist_ok=True)
         else:
-            if not os.path.exists(d):
-                shutil.copy2(s, d)
+            shutil.copy2(s, d)
+
+    # Copy the backed files to the Minecraft directory
+    if backed_files:
+        if os.path.exists(backed_files):
+            for item in os.listdir(backed_files):
+                s = os.path.join(backed_files, item)
+                d = os.path.join(mc_path, item)
+                if os.path.isdir(s):
+                    shutil.copytree(s, d, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(s, d)
+        else:
+            print("Backup folder does not exist:", backed_files)
+    else:
+        print("No backed files available.")
+
     print(f"Versão atualizada: {nolla_version}")
     update_profile()
     
@@ -175,7 +206,7 @@ def nolla_process():
             sys.exit()
         
         # Open the fabric installer (It is intended for future versions to make this section AUTOMATED without user input)
-        print("\n\n\nAguardando por atualização...\n\nlembre-se de que a versão Minecraft correta é a 1.19.2.\n\nA versão do modloader pode ser a mais recente (recomendado)")
+        print("\n\n\nAbrindo instalador...\n\nlembre-se de que a versão Minecraft correta é a 1.19.2.\n\nA versão do modloader pode ser a mais recente (recomendado)")
         subprocess.Popen(fabric_installer_path, cwd=mc_path).wait()
 
         # Check if the correct fabric version was installed
@@ -205,6 +236,7 @@ def nolla_process():
         print(f"nolla instalado: {installed_version}")
         print(f"nolla disponível: {nolla_version}")
         if installed_version == highest_version_folder.split()[-1]: # Nolla is updated
+            update_profile
             print("Nolla atualizado")
             messagebox.showinfo("Nolla atualizado", "A versão mais recente do Modpack Nolla está instalado!")
             sys.exit()
@@ -292,7 +324,7 @@ if os.path.isdir(os.path.join(mc_path, "mods")):
             backup_mods(mc_path)
             nolla_process()
 
-        Backup_button = tk.Button(frame, text="Fazer Backup", command=backup) # type: ignore
+        Backup_button = tk.Button(frame, text="Fazer Backup", command=backup) 
         Backup_button.pack(side=tk.LEFT, padx=10, pady=10)
 
         root.eval('tk::PlaceWindow . center')
