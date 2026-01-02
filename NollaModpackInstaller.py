@@ -1,6 +1,6 @@
-# Nolla installer - Version 0.50
-# - This version implements functions like backup of old mods, options for personalized installation, much reliable version checks, and more.
-# - Implemented simple GUI for user decision (not the most eye-candy UI but it is better than installing and deleting everything without consent)
+# Nolla installer - Version 0.55
+# - This version have little final modifications before personal distribuition, like:
+#       > Now it locates the XML in the mods folder
 # Status = finished (stable)
 
 import datetime
@@ -44,7 +44,7 @@ mc_path = os.path.join(os.getenv("APPDATA"), ".minecraft") # type: ignore
 
 # Check if nolla_metadata.xml exists and parse it
 print("Obtendo versão Nolla instalado...")
-metadata_file = os.path.join(mc_path, "nolla_metadata.xml")
+metadata_file = os.path.join(mc_path, "mods", "nolla_metadata.xml")
 if os.path.exists(metadata_file):
     tree = ET.parse(metadata_file)
     root = tree.getroot()
@@ -132,7 +132,7 @@ def backup_mods(mc_path):
         os.makedirs(backup_dir, exist_ok=True)
 
         # create a timestamped folder for this backup
-        timestamp = datetime.datetime.now().strftime("%d/%m/%Y_%H:%M")
+        timestamp = datetime.datetime.now().strftime("%d/%m/%Y_%H-%Mh")
         backup_folder = os.path.join(backup_dir, f"mods_backup_{timestamp}")
         os.makedirs(backup_folder)
 
@@ -182,7 +182,7 @@ def nolla_process():
         print("Checando versão...")
         modloader_pattern = "*fabric*loader*1.19.2*.jar"
         modloader_path = None
-        for root, files in os.walk(os.path.join(mc_path, "versions")): #type: ignore
+        for root, _, files in os.walk(os.path.join(mc_path, "versions")):
             for file in files:
                 if fnmatch.fnmatch(file, modloader_pattern):
                     modloader_path = os.path.join(root, file)
@@ -217,7 +217,7 @@ def nolla_process():
                 print("Nolla não está instalado")
                 print("Installando Nolla")
                 install_nolla()
-            elif installed_version > highest_version_folder.split()[-1]: #type: ignore
+            elif installed_version > highest_version_folder.split()[-1]:
                 messagebox.showinfo("Nolla instalado", "A versão instalada é mais recente do que a versão disponível do Modpack Nolla.")
                 sys.exit()
             else:
@@ -258,7 +258,6 @@ def update_nolla_gui():
 
     root.mainloop()
 
-
 # check if the "mods" folder exists in the Minecraft directory
 if os.path.isdir(os.path.join(mc_path, "mods")):
     if os.path.isfile(os.path.join(mc_path, "nolla_metadata.xml")):
@@ -282,14 +281,14 @@ if os.path.isdir(os.path.join(mc_path, "mods")):
         frame.pack(pady=5)
 
         def proceed():
-            root.destroy() # type: ignore
+            root.destroy()
             nolla_process()
 
         proceed_button = tk.Button(frame, text="Prosseguir", command=proceed)
         proceed_button.pack(side=tk.LEFT, padx=10, pady=10)
 
         def backup():
-            root.destroy() # type: ignore
+            root.destroy()
             backup_mods(mc_path)
             nolla_process()
 
@@ -299,6 +298,5 @@ if os.path.isdir(os.path.join(mc_path, "mods")):
         root.eval('tk::PlaceWindow . center')
 
         root.mainloop()
-
 else:
     nolla_process()
